@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:html_unescape/html_unescape.dart';
 import 'dart:async';
 import 'package:quizz_app/components/app_bar.dart';
+import 'package:quizz_app/components/variables.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen({Key? key}) : super(key: key);
+  const PlayScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _PlayScreenState createState() => _PlayScreenState();
 }
 
@@ -16,10 +18,11 @@ class _PlayScreenState extends State<PlayScreen> {
   List<dynamic> questions = [];
   int currentQuestionIndex = 0;
   String selectedAnswer = '';
-  int secondsRemaining = 10;
-  int maxHearts = 4;
-  int livesRemaining = 4; // Number of lives
+  // int secondsRemaining = 10;
+  // int maxHearts =20;
+  int livesRemaining = maxHearts; // Number of lives
   late Timer timer; // Make timer non-nullable
+  String url = 'https://opentdb.com/api.php?amount=$numberOfQuestions$difficulty${selectedCategory != 0 ? "&category=$selectedCategory" : 0}';
 
   final unescape = HtmlUnescape();
 
@@ -38,7 +41,7 @@ class _PlayScreenState extends State<PlayScreen> {
 
   Future<void> fetchQuestions() async {
     final response =
-        await http.get(Uri.parse('https://opentdb.com/api.php?amount=10'));
+        await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -59,7 +62,7 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   void startTimer() {
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (secondsRemaining > 0) {
           secondsRemaining--;
@@ -102,11 +105,11 @@ class _PlayScreenState extends State<PlayScreen> {
                 LinearProgressIndicator(
                   value: secondsRemaining / 10, // Calculate progress
                   backgroundColor: Colors.grey[400],
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 buildLives(), // Display lives
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Expanded(child: buildQuestion()),
               ],
             ),
@@ -177,15 +180,15 @@ class _PlayScreenState extends State<PlayScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('You Failed'),
-            content: Text('You have run out of lives.'),
+            title: const Text('You Failed'),
+            content: const Text('You have run out of lives.'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(context); // Close the dialog
-                  // Navigator.pop(context); // Exit the quiz screen
+                  Navigator.pop(context); // Exit the quiz screen
                 },
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           ),
@@ -195,31 +198,31 @@ class _PlayScreenState extends State<PlayScreen> {
     setState(() {
       selectedAnswer = option;
     });
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       nextQuestion();
     });
   }
 
-Widget buildLives() {
-  int remainingHearts = livesRemaining.clamp(0, maxHearts); // Ensure livesRemaining is within range [0, maxHearts]
+  Widget buildLives() {
+    int remainingHearts = livesRemaining.clamp(0, maxHearts); // Ensure livesRemaining is within range [0, maxHearts]
 
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: List.generate(
-      remainingHearts,
-      (index) => Icon(
-        Icons.favorite,
-        color: Colors.red,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        remainingHearts,
+        (index) => const Icon(
+          Icons.favorite,
+          color: Colors.red,
+        ),
+      ) +
+      List.generate(
+        maxHearts - remainingHearts, // Fill remaining spaces with empty hearts
+        (index) => const Icon(
+          Icons.favorite_border,
+          color: Colors.grey,
+        ),
       ),
-    ) +
-    List.generate(
-      maxHearts - remainingHearts, // Fill remaining spaces with empty hearts
-      (index) => Icon(
-        Icons.favorite_border,
-        color: Colors.grey,
-      ),
-    ),
-  );
+    );
 }
 
 
