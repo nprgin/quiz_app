@@ -1,41 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
 import 'package:quizz_app/components/app_bar.dart';
 import 'package:quizz_app/components/variables.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  List<dynamic> categories = [];
-  // selectedCategory = 0;
-
   @override
   void initState() {
     super.initState();
-    fetchCategories();
-  }
-
-  Future<void> fetchCategories() async {
-    final response = await http.get(Uri.parse('https://opentdb.com/api_category.php'));
-    final body = json.decode(response.body);
-    setState(() {
-      categories = body['trivia_categories'];
-      if (categories.isNotEmpty && selectedCategory != 0) {
-        selectedCategory = selectedCategory;
-      } else if (categories.isNotEmpty) {
-        selectedCategory = categories[0]['id'];
-      } else {
-        selectedCategory = 0;
-      }
-      // selectedCategory = categories.isNotEmpty ? categories[0]['id'] : selectedCategory; // Set the first category as the initial selected category
-    });
   }
 
   @override
@@ -47,8 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               'Change number of hearts:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -89,8 +67,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('5'),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               'Change number of questions:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -151,8 +129,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('50'),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               'Change difficulty level:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -203,8 +181,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('Hard'),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               'Choose a category:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

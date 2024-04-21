@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:html_unescape/html_unescape.dart';
 import 'dart:async';
-import 'package:quizz_app/components/app_bar.dart';
 import 'package:quizz_app/components/variables.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -18,30 +17,27 @@ class _PlayScreenState extends State<PlayScreen> {
   List<dynamic> questions = [];
   int currentQuestionIndex = 0;
   String selectedAnswer = '';
-  // int secondsRemaining = 10;
-  // int maxHearts =20;
   int livesRemaining = maxHearts; // Number of lives
-  late Timer timer; // Make timer non-nullable
+  late Timer timer;
   String url = 'https://opentdb.com/api.php?amount=$numberOfQuestions$difficulty${selectedCategory != 0 ? "&category=$selectedCategory" : 0}';
-
   final unescape = HtmlUnescape();
+  bool answerSelected = false; // Flag to track if an answer has been selected
 
   @override
   void initState() {
     super.initState();
-    timer = Timer(Duration.zero, () {}); // Initialize with an inactive timer
+    timer = Timer(Duration.zero, () {});
     fetchQuestions();
   }
 
   @override
   void dispose() {
-    timer.cancel(); // Cancel the timer when disposing the screen
+    timer.cancel();
     super.dispose();
   }
 
   Future<void> fetchQuestions() async {
-    final response =
-        await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -67,6 +63,7 @@ class _PlayScreenState extends State<PlayScreen> {
         if (secondsRemaining > 0) {
           secondsRemaining--;
         } else {
+          livesRemaining = livesRemaining - 1;
           timer.cancel();
           nextQuestion();
         }
@@ -76,7 +73,7 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void resetTimer() {
     setState(() {
-      secondsRemaining = 10;
+      secondsRemaining = initialSecondsRemaining;
     });
   }
 
@@ -85,6 +82,7 @@ class _PlayScreenState extends State<PlayScreen> {
     setState(() {
       currentQuestionIndex++;
       selectedAnswer = '';
+      answerSelected = false; // Reset the answerSelected flag for the next question
     });
     if (currentQuestionIndex < questions.length) {
       startTimer();
@@ -94,7 +92,17 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar("Quiz"),
+      appBar: AppBar(
+        title: const Text('Quiz'),
+        backgroundColor: Colors.grey,
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Text('${(currentQuestionIndex + 1) >= questions.length ? questions.length : currentQuestionIndex + 1} / ${questions.length}'),
+          ),
+        ],
+      ),
       backgroundColor: Colors.grey[300],
       body: questions.isEmpty
           ? const Center(
@@ -103,12 +111,12 @@ class _PlayScreenState extends State<PlayScreen> {
           : Column(
               children: [
                 LinearProgressIndicator(
-                  value: secondsRemaining / 10, // Calculate progress
+                  value: secondsRemaining / initialSecondsRemaining,
                   backgroundColor: Colors.grey[400],
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                 ),
                 const SizedBox(height: 10),
-                buildLives(), // Display lives
+                buildLives(),
                 const SizedBox(height: 10),
                 Expanded(child: buildQuestion()),
               ],
@@ -118,7 +126,6 @@ class _PlayScreenState extends State<PlayScreen> {
 
   Widget buildQuestion() {
     if (currentQuestionIndex >= questions.length || livesRemaining == -1) {
-      // Quiz has reached the end or player ran out of lives
       return const Center(
         child: Text(
           'Quiz Complete!',
@@ -130,19 +137,21 @@ class _PlayScreenState extends State<PlayScreen> {
     final question = questions[currentQuestionIndex];
     final List<String> options = List<String>.from(question['options']);
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            question['question'],
-            style: const TextStyle(fontSize: 20, color: Colors.black),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          ...options.map((option) {
-            return ElevatedButton(
-              onPressed: () {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          question['question'],
+          style: const TextStyle(fontSize: 20, color: Colors.black),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        ...options.map((option) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0), // Add padding here
+            child: ElevatedButton(
+              onPressed: answerSelected ? null : () {
                 selectAnswer(option, question['correct_answer']);
               },
               style: ButtonStyle(
@@ -162,21 +171,22 @@ class _PlayScreenState extends State<PlayScreen> {
                 ),
               ),
               child: Text(option),
-            );
-          }),
-        ],
-      ),
-    );
+            ),
+          );
+        }),
+      ],
+    ),
+  );
+
   }
 
   void selectAnswer(String option, String correctAnswer) {
-    timer.cancel(); // Cancel the timer when an answer is selected
+    timer.cancel();
     if (option != correctAnswer) {
       setState(() {
-        livesRemaining--; // Decrease lives on wrong answer
+        livesRemaining--;
       });
       if (livesRemaining < 0) {
-        // End the quiz if no lives left
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -185,8 +195,8 @@ class _PlayScreenState extends State<PlayScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                  Navigator.pop(context); // Exit the quiz screen
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 child: const Text('OK'),
               ),
@@ -197,6 +207,7 @@ class _PlayScreenState extends State<PlayScreen> {
     }
     setState(() {
       selectedAnswer = option;
+      answerSelected = true; // Set the answerSelected flag to true
     });
     Future.delayed(const Duration(seconds: 1), () {
       nextQuestion();
@@ -204,7 +215,7 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Widget buildLives() {
-    int remainingHearts = livesRemaining.clamp(0, maxHearts); // Ensure livesRemaining is within range [0, maxHearts]
+    int remainingHearts = livesRemaining.clamp(0, maxHearts);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -216,14 +227,12 @@ class _PlayScreenState extends State<PlayScreen> {
         ),
       ) +
       List.generate(
-        maxHearts - remainingHearts, // Fill remaining spaces with empty hearts
+        maxHearts - remainingHearts,
         (index) => const Icon(
           Icons.favorite_border,
           color: Colors.grey,
         ),
       ),
     );
-}
-
-
+  }
 }
