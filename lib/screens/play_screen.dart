@@ -27,6 +27,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void initState() {
     super.initState();
     timer = Timer(Duration.zero, () {});
+    loadSettingsFromSharedPreferences();
     fetchQuestions();
   }
 

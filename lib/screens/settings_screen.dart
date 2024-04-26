@@ -14,6 +14,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    loadSettingsFromSharedPreferences();
   }
 
   @override
@@ -206,5 +207,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    saveSettingsToSharedPreferences(); // Save settings to SharedPreferences when the screen is disposed
+    super.dispose();
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:quizz_app/components/variables.dart';
 import 'package:quizz_app/screens/loading_screen.dart';
 import '/screens/home_screen.dart';
 import '/screens/settings_screen.dart';
 import 'package:quizz_app/screens/play_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Required for SharedPreferences
+  await loadSettingsFromSharedPreferences(); // Load settings from SharedPreferences
   runApp(const MyApp());
 }
 
